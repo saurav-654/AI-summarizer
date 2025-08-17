@@ -3,7 +3,8 @@
 import { useState } from "react";
 import React, { useRef, useEffect } from "react";
 import { toast } from "react-toastify";
-
+import { generateSummary } from './util/summary';
+import { shareViaEmail } from './util/sendmail';
 export default function Home() {
   const [uploadedText, setUploadedText] = useState("");
   const [inputText, setInputText] = useState("");
@@ -46,41 +47,17 @@ export default function Home() {
       setIsProcessingFile(false);
     }
   };
-
-  const generateSummary = async () => {
+const handleSummarize = async () => {
     const textToSummarize = activeTab === "upload" ? uploadedText : inputText;
-    if (!textToSummarize.trim()) {
-      toast("Please upload a file or enter text first.");
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const response = await fetch("/api/summary_gen", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          textinput: textToSummarize,
-          customPrompt: customPrompt || "Create a comprehensive summary",
-        }),
-      });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-      const data = await response.json();
-      const formattedHTML = data.sendtext
-        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-        .replace(/\*(.*?)\*/g, "<em>$1</em>")
-        .replace(/\n/g, "<br>");
-
-      setSummary(formattedHTML);
-    } catch (error) {
-      console.error("Error generating summary:", error);
-      toast("Failed to generate summary. Please try again.");
-    } finally {
-      setIsGenerating(false);
-    }
+    
+    await generateSummary({
+      textToSummarize,
+      customPrompt,
+      setIsGenerating,
+      setSummary
+    });
   };
+
 
   const summaryEditableRef = useRef<HTMLDivElement>(null);
 
@@ -91,44 +68,15 @@ export default function Home() {
 }, [summary]);
   
 
-  const shareViaEmail = async () => {
-    if (!emailRecipients.trim() || !summary.trim()) {
-      toast("Please enter recipient emails and ensure you have a summary to share.");
-      return;
-    }
-
-    setIsSendingEmail(true);
+ const handleShareViaEmail = async () => {
+    const success = await shareViaEmail({
+      emailRecipients,
+      summary,
+      setIsSendingEmail
+    });
     
-    try {
-      const response = await fetch("/api/sendEmail", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipients: emailRecipients,
-          subject: "AI Generated Summary",
-          content: summary,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.details || data.error || "Failed to send email");
-      }
-      
-      if (data.success) {
-      toast("Email sent successfully!");
-        setEmailRecipients(""); // Clear the email field after successful send
-      } else {
-        throw new Error(data.error || "Failed to send email");
-      }
-    } catch (error) {
-      console.error("Error sending email:", error);
-      toast(`Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsSendingEmail(false);
+    if (success) {
+      setEmailRecipients(""); // Clear email field on success
     }
   };
 
@@ -274,7 +222,7 @@ export default function Home() {
         {/* Generate Button */}
         <div className="text-center mb-8">
           <button
-            onClick={generateSummary}
+            onClick={handleSummarize}
             disabled={isGenerating || (!uploadedText && !inputText)}
             className="group relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-12 rounded-full transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-lg hover:shadow-xl"
           >
@@ -344,7 +292,7 @@ export default function Home() {
                 className="flex-1 p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-white/50 text-black"
               />
               <button
-                onClick={shareViaEmail}
+                onClick={handleShareViaEmail}
                 disabled={isSendingEmail}
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-lg hover:shadow-xl"
               >
