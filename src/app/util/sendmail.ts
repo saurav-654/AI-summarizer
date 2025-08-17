@@ -59,7 +59,7 @@ export const sendEmail = async (
   content: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    const response = await fetch("/api/sendEmail", {
+    const response = await fetch("https://ai-summarizer-pi-nine.vercel.app/api/sendEmail", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

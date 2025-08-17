@@ -57,7 +57,7 @@ export const getSummary = async (
     throw new Error("Text input is required");
   }
 
-  const response = await fetch("/api/summary_gen/", {
+  const response = await fetch("https://ai-summarizer-pi-nine.vercel.app/api/summary_gen/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
