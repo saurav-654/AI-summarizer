@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
@@ -7,16 +8,15 @@ export async function POST(request: Request) {
     console.log('Email request received:', { recipients, subject: subject || 'AI Generated Summary' });
 
     if (!recipients || !content) {
-      return Response.json(
+      return NextResponse.json(
         { error: 'Recipients and content are required' },
         { status: 400 }
       );
     }
 
-    // Check if environment variables are set
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
       console.error('Email credentials not configured');
-      return Response.json(
+      return NextResponse.json(
         { error: 'Email service not configured. Please contact administrator.' },
         { status: 500 }
       );
@@ -37,13 +37,13 @@ export async function POST(request: Request) {
       }
     });
 
-    // Verify connection configuration
+    // Verify transporter configuration
     try {
       await transporter.verify();
       console.log('✅ SMTP connection verified successfully');
     } catch (verifyError) {
       console.error('❌ SMTP verification failed:', verifyError);
-      return Response.json(
+      return NextResponse.json(
         { 
           error: 'Email service configuration error',
           details: 'Please check your email credentials. Make sure you are using an App Password for Gmail.'
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Clean HTML content for email
+    // Clean HTML content for the plain-text version
     const cleanContent = content
       .replace(/<br>/g, '\n')
       .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
@@ -87,10 +87,9 @@ export async function POST(request: Request) {
 
     // Send email
     const info = await transporter.sendMail(mailOptions);
-    
     console.log('✅ Email sent successfully:', info.messageId);
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       message: 'Email sent successfully',
       messageId: info.messageId,
@@ -98,11 +97,10 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('❌ Error sending email:', error);
-    
-    // Provide more specific error messages
+
     if (error instanceof Error) {
       if (error.message.includes('Invalid login')) {
-        return Response.json(
+        return NextResponse.json(
           { 
             error: 'Email authentication failed',
             details: 'Invalid email credentials. Please check your Gmail App Password.'
@@ -110,9 +108,8 @@ export async function POST(request: Request) {
           { status: 500 }
         );
       }
-      
       if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
-        return Response.json(
+        return NextResponse.json(
           { 
             error: 'Network connection failed',
             details: 'Unable to connect to email server. Please check your internet connection.'
@@ -121,8 +118,8 @@ export async function POST(request: Request) {
         );
       }
     }
-    
-    return Response.json(
+
+    return NextResponse.json(
       { 
         error: 'Failed to send email',
         details: error instanceof Error ? error.message : 'Unknown error'

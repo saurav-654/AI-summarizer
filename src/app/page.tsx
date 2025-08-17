@@ -3,7 +3,7 @@
 import { useState } from "react";
 import React, { useRef, useEffect } from "react";
 import { toast } from "react-toastify";
-import { generateSummary } from './util/summary';
+import { generateSummary,getSummary } from './util/summary';
 import { shareViaEmail } from './util/sendmail';
 export default function Home() {
   const [uploadedText, setUploadedText] = useState("");
