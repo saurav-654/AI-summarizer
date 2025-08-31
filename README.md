@@ -136,10 +136,3 @@ Sends email with summary content.
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Support
-
-For support, email support@ai-summarizer.com or create an issue on GitHub.
-
----
-
-Built with ❤️ using Next.js and AI
