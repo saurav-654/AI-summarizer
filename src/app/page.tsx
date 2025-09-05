@@ -98,7 +98,7 @@ export default function Home() {
               />
             </svg>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-slate-600 to-slate-900 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-slate-600 to-slate-800 bg-clip-text text-transparent mb-4">
             AI Summarizer
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
